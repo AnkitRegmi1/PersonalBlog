@@ -35,8 +35,19 @@ const transporter = nodemailer.createTransport({
 
 app.use(cors({
     credentials: true,
-    origin: process.env.CLIENT_URL || 'http://localhost:3000',
+    origin: (origin, callback) => {
+        const allowed = [
+            process.env.CLIENT_URL || 'http://localhost:3000',
+            process.env.CLIENT_URL_2,
+        ].filter(Boolean);
+        if (!origin) return callback(null, true); // non-browser or same-origin
+        if (allowed.includes(origin) || /\.vercel\.app$/.test(origin)) {
+            return callback(null, true);
+        }
+        return callback(new Error('Not allowed by CORS'));
+    },
     allowedHeaders: ['Content-Type', 'Authorization'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
 }));
 app.use(express.json());
 app.use(cookieParser());
